@@ -38,7 +38,8 @@ namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
         }
         public async Task<ClaimsPrincipal> AuthenticateAsync(FunctionContext context, HttpRequestData req)
         {
-            return await _azureAdJwtBearerValidation.ValidateTokenAsync(getAccessTokenFromHeaders(req));
+            var logger = context.GetLogger("WorkerAuthentication");
+            return await _azureAdJwtBearerValidation.ValidateTokenAsync(getAccessTokenFromHeaders(req), logger);
         }
 
         public async Task<string> GetAccessTokenForUserAsync(HttpRequestData req, IEnumerable<string> scopes, string? tenantId = null, string? userFlow = null)

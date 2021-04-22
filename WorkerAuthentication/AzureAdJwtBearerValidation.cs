@@ -14,7 +14,6 @@ namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
     public class AzureAdJwtBearerValidation
     {
         private IConfiguration _configuration;
-        private ILogger _log;
         private const string scopeType = @"http://schemas.microsoft.com/identity/claims/scope";
         private static ConfigurationManager<OpenIdConnectConfiguration> _configurationManager;
 
@@ -23,10 +22,9 @@ namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
         private string _audience = string.Empty;
         private string _instance = string.Empty;
 
-        public AzureAdJwtBearerValidation(IConfiguration configuration, ILoggerFactory loggerFactory)
+        public AzureAdJwtBearerValidation(IConfiguration configuration)
         {
             _configuration = configuration;
-            _log = loggerFactory.CreateLogger<AzureAdJwtBearerValidation>();
 
             _tenantId = _configuration["AzureAd:TenantId"];
             _audience = _configuration["AzureAd:ClientId"];
@@ -34,14 +32,14 @@ namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
             _wellKnownEndpoint = $"{_instance}{_tenantId}/.well-known/openid-configuration";
         }
 
-        public async Task<ClaimsPrincipal> ValidateTokenAsync(string token)
+        public async Task<ClaimsPrincipal> ValidateTokenAsync(string token, ILogger logger)
         {
             if (string.IsNullOrEmpty(token))
             {
                 return null;
             }
 
-            var oidcWellknownEndpoints = await GetOidcWellKnownConfiguration();
+            var oidcWellknownEndpoints = await GetOidcWellKnownConfiguration(logger);
 
             var tokenValidator = new JwtSecurityTokenHandler();
 
@@ -66,28 +64,28 @@ namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
             }
             catch (Exception ex)
             {
-                _log.LogError(ex.ToString());
+                logger.LogError(ex.ToString());
             }
 
             return null;
         }
 
-        private async Task<OpenIdConnectConfiguration> GetOidcWellKnownConfiguration()
+        private async Task<OpenIdConnectConfiguration> GetOidcWellKnownConfiguration(ILogger logger)
         {
             if(_configurationManager == null)
             {
-                _log.LogDebug($"Get OIDC well known endpoints {_wellKnownEndpoint}");
+                logger.LogDebug($"Get OIDC well known endpoints {_wellKnownEndpoint}");
                 _configurationManager = new ConfigurationManager<OpenIdConnectConfiguration>(_wellKnownEndpoint, new OpenIdConnectConfigurationRetriever());
             }
 
             return await _configurationManager.GetConfigurationAsync();
         }
 
-        public bool IsScopeValid(ClaimsPrincipal claimsPrincipal, string scopeName)
+        public bool IsScopeValid(ClaimsPrincipal claimsPrincipal, string scopeName, ILogger logger)
         {
             if (claimsPrincipal == null)
             {
-                _log.LogWarning($"Scope invalid {scopeName}");
+                logger.LogWarning($"Scope invalid {scopeName}");
                 return false;
             }
 
@@ -97,17 +95,17 @@ namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
 
             if (string.IsNullOrEmpty(scopeClaim))
             {
-                _log.LogWarning($"Scope invalid {scopeName}");
+                logger.LogWarning($"Scope invalid {scopeName}");
                 return false;
             }
 
             if (!scopeClaim.Equals(scopeName, StringComparison.OrdinalIgnoreCase))
             {
-                _log.LogWarning($"Scope invalid {scopeName}");
+                logger.LogWarning($"Scope invalid {scopeName}");
                 return false;
             }
 
-            _log.LogDebug($"Scope valid {scopeName}");
+            logger.LogDebug($"Scope valid {scopeName}");
             return true;
         }
     }
