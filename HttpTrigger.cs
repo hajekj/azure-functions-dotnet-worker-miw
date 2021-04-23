@@ -30,7 +30,6 @@ namespace azure_functions_dotnet_worker_miw
             {
                 var token = await _authentication.GetAccessTokenForUserAsync(req, new string[] { "https://graph.microsoft.com/.default" });
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                await Task.FromResult<object>(null);
             }));
 
             var name = principal.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name").First().Value;
