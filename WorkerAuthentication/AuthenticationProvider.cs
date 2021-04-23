@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
@@ -12,7 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
-using Microsoft.Identity.Web;
 
 namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
 {
@@ -40,6 +38,11 @@ namespace azure_functions_dotnet_worker_miw.WorkerAuthentication
         {
             var logger = context.GetLogger("WorkerAuthentication");
             return await _azureAdJwtBearerValidation.ValidateTokenAsync(getAccessTokenFromHeaders(req), logger);
+        }
+        public async Task<ClaimsPrincipal> AuthenticateAsync(FunctionContext context, string token)
+        {
+            var logger = context.GetLogger("WorkerAuthentication");
+            return await _azureAdJwtBearerValidation.ValidateTokenAsync(token, logger);
         }
 
         public async Task<string> GetAccessTokenForUserAsync(HttpRequestData req, IEnumerable<string> scopes, string? tenantId = null, string? userFlow = null)

@@ -14,8 +14,7 @@ namespace azure_functions_dotnet_worker_miw
             var host = new HostBuilder()
                 .ConfigureFunctionsWorkerDefaults(workerApplication =>
                 {
-                    // Register our custom middleware with the worker
-
+                    // workerApplication.UseMiddleware<AuthenticationMiddleware>();
                 })
                 .ConfigureAppConfiguration(configuration =>
                 {
